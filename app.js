@@ -126,7 +126,11 @@ const DB = {
 (function initDefaults() {
   if (!localStorage.getItem('kasa_sb_url'))  localStorage.setItem('kasa_sb_url',  'https://vmcofryclsvsbdttzkhs.supabase.co');
   if (!localStorage.getItem('kasa_sb_key'))  localStorage.setItem('kasa_sb_key',  'sb_publishable_vo7EGx2VNfZ11_L2_FNYlw_bHfhAZmU');
-  if (!localStorage.getItem('kasa_gemini_key')) localStorage.setItem('kasa_gemini_key', 'AIzaSyDK1YjjuUMUjg8YagidbID_Q6Z92QMUvN4');
+  // Vždy přepiš starý Gemini klíč novým
+  const currentKey = localStorage.getItem('kasa_gemini_key');
+  if (!currentKey || currentKey === 'AIzaSyBVAkO9jiX2nljYfJUFiiSJovdyHxBrapg') {
+    localStorage.setItem('kasa_gemini_key', 'AIzaSyDK1YjjuUMUjg8YagidbID_Q6Z92QMUvN4');
+  }
 })();
 
 // ═══ POMOCNÉ FUNKCE ═══
