@@ -1172,7 +1172,7 @@ Pokud datum na účtence není, použij null.
 Měna je CZK. Vrať pouze čistý JSON, nic jiného.`;
 
     // Zkus nejprve gemini-2.0-flash, pak fallback na gemini-1.5-flash
-    const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+    const models = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash-latest', 'gemini-1.5-pro-latest'];
     let lastError = null;
 
     for (const model of models) {
@@ -1977,8 +1977,29 @@ window.SupaSync = (() => {
     if (!hhId) return;
     const { data, error } = await sb.from('transactions').select().eq('household_id', hhId).order('date', { ascending: false });
     if (error || !data) { console.warn('Supabase pull error:', error); return; }
-    // Remote data je zdrojem pravdy — přepíše lokální
-    DB.saveTransactions(data);
+
+    const local = DB.getTransactions();
+
+    // Pokud je Supabase prázdné ale lokálně máme data → nahraj lokální do Supabase
+    if (data.length === 0 && local.length > 0) {
+      await pushAllLocal();
+      return;
+    }
+
+    // Merge: spoj remote a lokální, odstraň duplicity (remote má přednost)
+    const remoteIds = new Set(data.map(t => t.id));
+    const localOnly = local.filter(t => !remoteIds.has(t.id));
+
+    // Lokálně nové transakce nahraj do Supabase
+    if (localOnly.length > 0) {
+      const withHh = localOnly.map(t => ({ ...t, household_id: hhId }));
+      await sb.from('transactions').upsert(withHh).catch(e => console.warn('push local-only error:', e));
+    }
+
+    // Ulož merge výsledek lokálně
+    const merged = [...data, ...localOnly];
+    merged.sort((a, b) => new Date(b.date) - new Date(a.date));
+    DB.saveTransactions(merged);
   }
 
   async function pushAllLocal() {
