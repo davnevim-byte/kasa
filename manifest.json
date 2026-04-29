@@ -1,0 +1,13 @@
+{
+  "name": "Kasa — Rodinné Finance",
+  "short_name": "Kasa",
+  "description": "Sledování financí domácnosti",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b0d16",
+  "theme_color": "#0b0d16",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

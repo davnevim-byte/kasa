@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Kasa — Rodinné Finance</title>
+  <meta name="description" content="Sledování financí domácnosti">
+  <meta name="theme-color" content="#0b0d16">
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Kasa">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+  <!-- ═══ PIN SCREEN ═══ -->
+  <div id="screen-pin" class="pin-screen">
+    <div class="pin-bg-pattern"></div>
+    <div class="pin-container">
+      <div class="pin-brand">
+        <div class="pin-logo">₭</div>
+        <h1 class="pin-title">Kasa</h1>
+        <p class="pin-sub" id="pin-subtitle">Zadejte PIN</p>
+      </div>
+      <div class="pin-dots">
+        <span class="dot" id="d1"></span>
+        <span class="dot" id="d2"></span>
+        <span class="dot" id="d3"></span>
+        <span class="dot" id="d4"></span>
+      </div>
+      <div class="pin-error" id="pin-error"></div>
+      <div class="numpad">
+        <button class="num-btn" data-num="1">1</button>
+        <button class="num-btn" data-num="2">2</button>
+        <button class="num-btn" data-num="3">3</button>
+        <button class="num-btn" data-num="4">4</button>
+        <button class="num-btn" data-num="5">5</button>
+        <button class="num-btn" data-num="6">6</button>
+        <button class="num-btn" data-num="7">7</button>
+        <button class="num-btn" data-num="8">8</button>
+        <button class="num-btn" data-num="9">9</button>
+        <button class="num-btn ghost"></button>
+        <button class="num-btn" data-num="0">0</button>
+        <button class="num-btn del-btn" id="pin-del">⌫</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ MAIN APP ═══ -->
+  <div id="app" class="hidden">
+
+    <!-- Screen Wrapper -->
+    <div class="screens">
+
+      <!-- Dashboard -->
+      <div id="screen-dashboard" class="screen active">
+        <div class="screen-header">
+          <div class="month-nav">
+            <button class="month-arrow" id="prev-month">‹</button>
+            <h2 class="month-label" id="month-label">—</h2>
+            <button class="month-arrow" id="next-month">›</button>
+          </div>
+          <button class="icon-btn spin-on-click" id="btn-sync" title="Sync">↺</button>
+        </div>
+        <div class="screen-scroll">
+          <div class="balance-card">
+            <div class="balance-badge">Přehled měsíce</div>
+            <div class="balance-net" id="balance-net">0 Kč</div>
+            <div class="balance-split">
+              <div class="bs-item income-side">
+                <div class="bs-arrow">↑</div>
+                <div>
+                  <div class="bs-lbl">Příjmy</div>
+                  <div class="bs-val" id="total-income">0 Kč</div>
+                </div>
+              </div>
+              <div class="bs-sep"></div>
+              <div class="bs-item expense-side">
+                <div class="bs-arrow">↓</div>
+                <div>
+                  <div class="bs-lbl">Výdaje</div>
+                  <div class="bs-val" id="total-expenses">0 Kč</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec-title-row">
+            <span class="sec-title" style="padding:0">Rychlé šablony</span>
+            <button class="sec-action" id="btn-add-template">+ Přidat</button>
+          </div>
+          <div class="templates-row" id="templates-row"></div>
+
+          <div class="sec-title">Kategorie výdajů</div>
+          <div class="cats-grid" id="cats-grid"></div>
+
+          <div class="sec-title">Poslední transakce</div>
+          <div class="tx-list" id="recent-list"></div>
+        </div>
+      </div>
+
+      <!-- Transactions -->
+      <div id="screen-transactions" class="screen">
+        <div class="screen-header">
+          <h2 class="screen-title">Transakce</h2>
+          <div class="filter-chips" id="filter-chips">
+            <button class="chip active" data-filter="all">Vše</button>
+            <button class="chip" data-filter="expense">Výdaje</button>
+            <button class="chip" data-filter="income">Příjmy</button>
+          </div>
+        </div>
+        <div class="search-wrap">
+          <input type="text" id="search-input" class="search-input" placeholder="🔍 Hledat...">
+        </div>
+        <div class="screen-scroll no-top-pad" id="transactions-list"></div>
+      </div>
+
+      <!-- Stats -->
+      <div id="screen-stats" class="screen">
+        <div class="screen-header">
+          <h2 class="screen-title">Statistiky</h2>
+          <div class="stats-tabs">
+            <button class="stab active" data-tab="month">Měsíc</button>
+            <button class="stab" data-tab="year">Rok</button>
+          </div>
+        </div>
+
+        <!-- MĚSÍČNÍ pohled -->
+        <div class="screen-scroll" id="stats-month-view">
+          <div class="chart-card">
+            <div class="chart-label">Výdaje dle kategorií — tento měsíc</div>
+            <div class="pie-wrap">
+              <canvas id="pie-chart" width="220" height="220"></canvas>
+            </div>
+            <div class="pie-legend" id="pie-legend"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-label">Příjmy vs Výdaje (6 měsíců)</div>
+            <canvas id="bar-chart" width="320" height="180"></canvas>
+            <div class="bar-legend">
+              <span class="bl-dot income"></span> Příjmy &nbsp;
+              <span class="bl-dot expense"></span> Výdaje
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-label">Srovnání osob — tento měsíc</div>
+            <div id="person-stats"></div>
+          </div>
+        </div>
+
+        <!-- ROČNÍ pohled -->
+        <div class="screen-scroll hidden" id="stats-year-view">
+          <div class="year-picker">
+            <button class="month-arrow" id="year-prev">‹</button>
+            <span class="year-label" id="year-label">2025</span>
+            <button class="month-arrow" id="year-next">›</button>
+          </div>
+          <div class="chart-card">
+            <div class="chart-label">Výdaje vs Příjmy — celý rok</div>
+            <canvas id="year-bar-chart" width="320" height="200"></canvas>
+            <div class="bar-legend">
+              <span class="bl-dot income"></span> Příjmy &nbsp;
+              <span class="bl-dot expense"></span> Výdaje
+            </div>
+          </div>
+          <div class="year-summary-cards" id="year-summary"></div>
+          <div class="chart-card">
+            <div class="chart-label">Trendy kategorií — měsíc vs minulý měsíc</div>
+            <div id="trends-list"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-label">Přehled po měsících</div>
+            <div id="year-months-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings -->
+      <div id="screen-settings" class="screen">
+        <div class="screen-header">
+          <h2 class="screen-title">Nastavení</h2>
+        </div>
+        <div class="screen-scroll">
+
+          <div class="setting-group">
+            <div class="sg-title">Vzhled</div>
+            <div class="theme-toggle">
+              <span class="theme-ico">☀️</span>
+              <span class="theme-toggle-label">Světlý režim</span>
+              <label class="toggle-sw">
+                <input type="checkbox" id="theme-toggle-input">
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="setting-group">
+            <div class="sg-title">Profil</div>
+            <div class="sg-row">
+              <label>Vaše jméno</label>
+              <input type="text" id="s-name" class="s-input" placeholder="Jméno">
+            </div>
+            <div class="sg-row">
+              <label>Jméno partnera/ky</label>
+              <input type="text" id="s-name2" class="s-input" placeholder="Jméno">
+            </div>
+          </div>
+
+          <div class="setting-group">
+            <div class="sg-title">Sdílení domácnosti</div>
+            <div id="household-status" class="household-status"></div>
+            <button class="sg-btn" id="btn-create-hh">✦ Vytvořit domácnost</button>
+            <div class="sg-divider">nebo se připojte kódem</div>
+            <div class="sg-inline">
+              <input type="text" id="invite-input" class="s-input" placeholder="Kód (např. AB12CD)">
+              <button class="sg-btn-sm" id="btn-join-hh">Připojit</button>
+            </div>
+          </div>
+
+          <div class="setting-group">
+            <div class="sg-title">Supabase synchronizace</div>
+            <div class="sg-help">
+              <a href="https://supabase.com" target="_blank">supabase.com</a> → New Project → Settings → API
+            </div>
+            <div class="sg-row">
+              <label>URL</label>
+              <input type="text" id="s-sb-url" class="s-input" placeholder="https://xxx.supabase.co">
+            </div>
+            <div class="sg-row">
+              <label>Anon Key</label>
+              <input type="text" id="s-sb-key" class="s-input" placeholder="eyJ...">
+            </div>
+            <button class="sg-btn" id="btn-save-sb">Uložit & připojit</button>
+            <div class="sb-sql-hint" id="sb-sql-btn" style="cursor:pointer;color:var(--gold);font-size:12px;text-align:center">
+              ▸ Zobrazit SQL pro setup databáze
+            </div>
+            <pre class="sql-block hidden" id="sql-block">-- Spusťte v Supabase SQL editoru:
+
+CREATE TABLE households (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT,
+  invite_code TEXT UNIQUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE transactions (
+  id TEXT PRIMARY KEY,
+  household_id UUID REFERENCES households(id),
+  type TEXT,
+  amount DECIMAL(10,2),
+  category TEXT,
+  description TEXT,
+  date DATE,
+  person TEXT,
+  notes TEXT,
+  photos JSONB DEFAULT '[]',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE households ENABLE ROW LEVEL SECURITY;
+ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "open" ON households FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "open" ON transactions FOR ALL USING (true) WITH CHECK (true);
+
+-- Storage bucket pro fotky
+INSERT INTO storage.buckets (id, name, public) VALUES ('receipts', 'receipts', true);
+CREATE POLICY "open" ON storage.objects FOR ALL USING (bucket_id = 'receipts') WITH CHECK (bucket_id = 'receipts');</pre>
+          </div>
+
+          <div class="setting-group">
+            <div class="sg-title">Notifikace</div>
+            <div class="sg-help">Upozornění při překročení nebo blížícím se limitu rozpočtu.</div>
+            <div id="notif-status" class="household-status"></div>
+            <button class="sg-btn" id="btn-enable-notifs">🔔 Povolit notifikace</button>
+          </div>
+
+          <div class="setting-group">
+            <div class="sg-title">Bezpečnost</div>
+            <button class="sg-btn" id="btn-change-pin">🔒 Změnit PIN</button>
+          </div>
+
+          <div class="setting-group">
+            <div class="sg-title">Data</div>
+            <button class="sg-btn" id="btn-export">↓ Export CSV</button>
+            <button class="sg-btn danger" id="btn-clear-data">⚠ Smazat všechna data</button>
+          </div>
+
+          <div class="app-ver">Kasa v1.0 — Rodinné finance</div>
+        </div>
+      </div>
+
+    </div><!-- /screens -->
+
+    <!-- ═══ ADD TRANSACTION OVERLAY ═══ -->
+    <div id="overlay-add" class="overlay">
+      <div class="overlay-header">
+        <button class="ol-close" id="close-add">✕</button>
+        <h2 class="ol-title">Nová transakce</h2>
+        <button class="ol-save" id="save-tx">Uložit</button>
+      </div>
+      <div class="overlay-scroll">
+        <div class="type-switch">
+          <button class="ts-btn active" data-type="expense">Výdaj</button>
+          <button class="ts-btn" data-type="income">Příjem</button>
+        </div>
+        <div class="amount-row">
+          <span class="amt-curr">Kč</span>
+          <input type="number" id="tx-amount" class="amt-input" placeholder="0" inputmode="decimal" step="0.01">
+        </div>
+        <div class="field-section">
+          <div class="field-label">Kategorie</div>
+          <div class="cat-grid" id="cat-grid"></div>
+        </div>
+        <div class="field-section">
+          <div class="field-label">Popis</div>
+          <input type="text" id="tx-desc" class="field-input" placeholder="Co to bylo?">
+        </div>
+        <div class="field-section">
+          <div class="field-label">Datum</div>
+          <input type="date" id="tx-date" class="field-input">
+        </div>
+        <div class="field-section">
+          <div class="field-label">Osoba</div>
+          <div class="person-sw" id="person-sw"></div>
+        </div>
+        <div class="field-section">
+          <div class="field-label">Poznámka (volitelně)</div>
+          <textarea id="tx-note" class="field-input" rows="2" placeholder="..."></textarea>
+        </div>
+        <button class="scan-btn" id="btn-open-scan">📷 Naskenovat účtenku (AI)</button>
+        <div class="photo-section">
+          <div class="field-label">Foto účtenky / dokladu</div>
+          <div class="photo-row" id="photo-row">
+            <label class="photo-add-btn" id="photo-add-label">
+              <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none">
+              <span class="photo-add-ico">＋</span>
+              <span class="photo-add-txt">Přidat foto</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ SCAN OVERLAY ═══ -->
+    <div id="overlay-scan" class="overlay scan-overlay">
+      <div class="overlay-header transparent-header">
+        <button class="ol-close white" id="close-scan">✕</button>
+        <h2 class="ol-title white">Skenovat účtenku</h2>
+        <div></div>
+      </div>
+      <div class="camera-area">
+        <video id="cam-video" autoplay playsinline muted></video>
+        <div class="cam-guide">
+          <div class="cam-frame"></div>
+          <p class="cam-hint">Namiřte kameru na účtenku</p>
+        </div>
+        <div class="cam-controls">
+          <button class="shutter-btn" id="btn-shutter">
+            <span class="shutter-inner"></span>
+          </button>
+        </div>
+        <div class="cam-processing hidden" id="cam-processing">
+          <div class="proc-ring"></div>
+          <p>Analyzuji účtenku pomocí AI…</p>
+        </div>
+      </div>
+      <canvas id="cap-canvas" class="hidden"></canvas>
+    </div>
+
+    <!-- ═══ BOTTOM NAV ═══ -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-screen="dashboard">
+        <span class="nav-ico">⌂</span>
+        <span class="nav-lbl">Přehled</span>
+      </button>
+      <button class="nav-item" data-screen="transactions">
+        <span class="nav-ico">≡</span>
+        <span class="nav-lbl">Transakce</span>
+      </button>
+      <button class="nav-item nav-add" id="nav-add">
+        <span class="nav-plus">+</span>
+      </button>
+      <button class="nav-item" data-screen="stats">
+        <span class="nav-ico">◉</span>
+        <span class="nav-lbl">Grafy</span>
+      </button>
+      <button class="nav-item" data-screen="settings">
+        <span class="nav-ico">⚙</span>
+        <span class="nav-lbl">Nastavení</span>
+      </button>
+    </nav>
+
+  </div><!-- /app -->
+
+  <script src="app.js"></script>
+</body>
+</html>
