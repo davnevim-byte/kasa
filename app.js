@@ -126,7 +126,7 @@ const DB = {
 (function initDefaults() {
   if (!localStorage.getItem('kasa_sb_url'))  localStorage.setItem('kasa_sb_url',  'https://vmcofryclsvsbdttzkhs.supabase.co');
   if (!localStorage.getItem('kasa_sb_key'))  localStorage.setItem('kasa_sb_key',  'sb_publishable_vo7EGx2VNfZ11_L2_FNYlw_bHfhAZmU');
-  if (!localStorage.getItem('kasa_gemini_key')) localStorage.setItem('kasa_gemini_key', 'AIzaSyBVAkO9jiX2nljYfJUFiiSJovdyHxBrapg');
+  if (!localStorage.getItem('kasa_gemini_key')) localStorage.setItem('kasa_gemini_key', 'AIzaSyDK1YjjuUMUjg8YagidbID_Q6Z92QMUvN4');
 })();
 
 // ═══ POMOCNÉ FUNKCE ═══
@@ -1075,7 +1075,7 @@ const Camera = (() => {
   let stream = null;
 
   function open() {
-    const apiKey = DB.getSetting('gemini_key', 'AIzaSyBVAkO9jiX2nljYfJUFiiSJovdyHxBrapg');
+    const apiKey = DB.getSetting('gemini_key', 'AIzaSyDK1YjjuUMUjg8YagidbID_Q6Z92QMUvN4');
     if (!apiKey) {
       showToast('Nastav API klíč v Nastavení', 'error');
       return;
@@ -1155,13 +1155,13 @@ const Camera = (() => {
       } else if (msg.includes('network') || msg.includes('fetch')) {
         showToast('Chyba sítě — zkontroluj připojení', 'error');
       } else {
-        showToast('Nepodařilo se přečíst účtenku: ' + (msg.slice(0, 40) || 'neznámá chyba'), 'error');
+        showToast('Chyba: ' + (msg.slice(0, 60) || 'neznámá'), 'error');
       }
     }
   }
 
   async function analyzeReceipt(base64) {
-    const apiKey = DB.getSetting('gemini_key', 'AIzaSyBVAkO9jiX2nljYfJUFiiSJovdyHxBrapg');
+    const apiKey = DB.getSetting('gemini_key', 'AIzaSyDK1YjjuUMUjg8YagidbID_Q6Z92QMUvN4');
     const catList = EXPENSE_CATS.map(c => `${c.id} (${c.name})`).join(', ');
     const prompt = `Přečti tuto účtenku a vrať POUZE JSON (bez markdown, bez komentářů) ve formátu:
 {"amount": číslo, "description": "název obchodu nebo co nakoupeno", "category": "id kategorie", "date": "YYYY-MM-DD nebo null", "notes": "krátká poznámka nebo null"}
@@ -1172,7 +1172,7 @@ Pokud datum na účtence není, použij null.
 Měna je CZK. Vrať pouze čistý JSON, nic jiného.`;
 
     // Zkus nejprve gemini-2.0-flash, pak fallback na gemini-1.5-flash
-    const models = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash-latest', 'gemini-1.5-pro-latest'];
+    const models = ['gemini-flash-latest', 'gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash'];
     let lastError = null;
 
     for (const model of models) {
@@ -1797,7 +1797,7 @@ const Settings = (() => {
     });
     setTimeout(() => {
       const el = sg.querySelector('#s-api-key');
-      if (el) el.value = DB.getSetting('gemini_key', 'AIzaSyBVAkO9jiX2nljYfJUFiiSJovdyHxBrapg');
+      if (el) el.value = DB.getSetting('gemini_key', 'AIzaSyDK1YjjuUMUjg8YagidbID_Q6Z92QMUvN4');
     }, 100);
     return sg;
   }
